@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        #notification {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #notification button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:5001');
+
+        socket.on('file_duplicate', (data) => {
+            document.getElementById('file_path').innerText = data.file_path;
+            document.getElementById('notification').style.display = 'block';
+        });
+
+        function sendDecision(keep) {
+            fetch('/decision', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    file_path: document.getElementById('file_path').innerText,
+                    keep_file: keep
+                })
+            }).then(response => response.json())
+              .then(data => {
+                if (data.status === 'processed') {
+                    document.getElementById('notification').style.display = 'none';
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="notification">
+        <h1>Duplicate Download Alert</h1>
+        <p>File detected: <span id="file_path"></span></p>
+        <button onclick="sendDecision(true)">Keep File</button>
+        <button onclick="sendDecision(false)">Remove File</button>
+    </div>
+    <h1>File Download Monitoring Page</h1>
+    <p>Waiting for file download notifications...</p>
+</body>
+</html>
